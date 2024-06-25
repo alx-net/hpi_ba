@@ -1,0 +1,8 @@
+- pipeline.id: main
+  path.config: "/home/ubuntu/logstash_config/postgres/main.logstash.conf"
+
+- pipeline.id: pipeline_statement
+  path.config: "/home/ubuntu/logstash_config/postgres/pipeline_statement.logstash.conf"
+
+- pipeline.id: pipeline_plan
+  path.config: "/home/ubuntu/logstash_config/postgres/pipeline_plan.logstash.conf"
