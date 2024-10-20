@@ -9,3 +9,9 @@
 
 - pipeline.id: pipeline_electricity_meters
   path.config: "${CONFIG_DIR}/postgres/pipeline_electricity_meters.logstash.conf"
+
+- pipeline.id: pipeline_ipmi
+  path.config: "${CONFIG_DIR}/postgres/pipeline_ipmi_normalized.logstash.conf"
+
+- pipeline.id: pipeline_pdu
+  path.config: "${CONFIG_DIR}/postgres/pipeline_pdu_normalized.logstash.conf"
