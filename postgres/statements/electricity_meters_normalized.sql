@@ -3,11 +3,15 @@ with
 limits as (
     select
         device_id,
+
         percentile_disc(0.005) within group (order by "ActivePower") as q_low,
         percentile_disc(0.995) within group (order by "ActivePower") as q_high,
 
-        percentile_disc(0.1) within group (order by "ActivePower") as q1,
-        percentile_disc(0.9) within group (order by "ActivePower") as q9,
+        percentile_disc(0.01) within group (order by "ActivePower") as q1,
+        percentile_disc(0.99) within group (order by "ActivePower") as q99,
+
+        percentile_disc(0.1) within group (order by "ActivePower") as q10,
+        percentile_disc(0.9) within group (order by "ActivePower") as q90,
 
         percentile_disc(0.5) within group (order by "ActivePower") as median
     from metrics.electricity_meters
@@ -37,9 +41,10 @@ select
     q_low/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_low,
     q_high/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_high,
     q1/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q1,
-    q9/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q9,
+    q99/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q99,
+    q10/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q10,
+    q90/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q90,
     median/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as median,
     q_high as scale,
     amount
 from joined_counts
-
