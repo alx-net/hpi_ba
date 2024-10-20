@@ -33,13 +33,13 @@ joined_counts as (
 select
     time,
     device_id,
-    "ActivePower"/coalesce(nullif(median,0), 1) as "ActivePower",
-    q_low/coalesce(nullif(median,0), 1) as q_low,
-    q_high/coalesce(nullif(median,0), 1) as q_high,
-    q1/coalesce(nullif(median,0), 1) as q1,
-    q9/coalesce(nullif(median,0), 1) as q9,
-    median/coalesce(nullif(median,0), 1) as median,
-    median as scale,
+    "ActivePower"/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as "ActivePower",
+    q_low/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_low,
+    q_high/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_high,
+    q1/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q1,
+    q9/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q9,
+    median/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as median,
+    q_high as scale,
     amount
 from joined_counts
 
