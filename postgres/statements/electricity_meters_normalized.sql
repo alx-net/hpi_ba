@@ -7,15 +7,35 @@ limits as (
         percentile_disc(0.005) within group (order by "ActivePower") as q_low,
         percentile_disc(0.995) within group (order by "ActivePower") as q_high,
 
-        percentile_disc(0.01) within group (order by "ActivePower") as q1,
-        percentile_disc(0.99) within group (order by "ActivePower") as q99,
-
-        percentile_disc(0.1) within group (order by "ActivePower") as q10,
-        percentile_disc(0.9) within group (order by "ActivePower") as q90,
+        percentile_disc(0.25) within group (order by "ActivePower") as q1,
+        percentile_disc(0.75) within group (order by "ActivePower") as q3,
 
         percentile_disc(0.5) within group (order by "ActivePower") as median
     from metrics.electricity_meters
     group by device_id
+),
+
+limits_enhanced as (
+    select
+        device_id,
+        coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as scale,
+        q3-q1 as iqr,
+        q1,
+        q3,
+        median
+    from limits
+),
+
+thresholds as (
+    select
+        device_id,
+        scale,
+        q1 - (1.5*iqr) as lower_threshold,
+        q3 + (1.5*iqr) as higher_threshold,
+        q1,
+        q3,
+        median
+    from limits_enhanced
 ),
 
 metrics as (
@@ -24,7 +44,7 @@ metrics as (
 ),
 
 joined as (
-    select * from limits left join metrics using (device_id)
+    select * from thresholds left join metrics using (device_id)
 ),
 
 counts as (
@@ -37,14 +57,11 @@ joined_counts as (
 select
     time,
     device_id,
-    "ActivePower"/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as "ActivePower",
-    q_low/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_low,
-    q_high/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q_high,
-    q1/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q1,
-    q99/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q99,
-    q10/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q10,
-    q90/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as q90,
-    median/coalesce(nullif(greatest(abs(q_low), abs(q_high)),0), 1) as median,
-    q_high as scale,
-    amount
+    "ActivePower"/scale as "ActivePower",
+    q1/scale as q1,
+    q3/scale as q3,
+    lower_threshold/scale as lower_threshold,
+    higher_threshold/scale as higher_threshold,
+    median/scale as median,
+    amount/scale as amount
 from joined_counts
