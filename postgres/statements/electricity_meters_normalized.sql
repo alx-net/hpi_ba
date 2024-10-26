@@ -63,5 +63,6 @@ select
     lower_threshold/scale as lower_threshold,
     higher_threshold/scale as higher_threshold,
     median/scale as median,
-    amount/scale as amount
+    amount,
+    scale
 from joined_counts
