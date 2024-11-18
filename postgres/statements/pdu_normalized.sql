@@ -39,7 +39,7 @@ thresholds as (
         device_id,
         scale,
         q1 - (1.5*iqr) as lower_threshold,
-        q3 + (1.5*iqr) as higher_threshold,
+        q3 + (1.5*iqr) as upper_threshold,
         q1,
         q3,
         median
@@ -69,8 +69,15 @@ select
     q1/scale as q1,
     q3/scale as q3,
     lower_threshold/scale as lower_threshold,
-    higher_threshold/scale as higher_threshold,
+    upper_threshold/scale as upper_threshold,
     median/scale as median,
     amount,
-    scale
+    scale,
+
+    case
+        when "ActivePower" < lower_threshold then true
+        when "ActivePower" > upper_threshold then true
+        else false
+    end as outlier
+    
 from joined_counts
