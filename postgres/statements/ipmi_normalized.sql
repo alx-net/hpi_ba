@@ -48,7 +48,7 @@ thresholds as (
 
 metrics as (
     select * from source
-    where time >= now() - interval '1h'
+    where time >= now() - interval '1h' - interval '1 minute'
 ),
 
 joined as (
