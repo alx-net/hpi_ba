@@ -1,0 +1,196 @@
+{
+    $schema: https://vega.github.io/schema/vega-lite/v5.json
+    title: Active Power Distribution by Device ID
+    data: {
+      url: {
+        index: "power-measurements-normalized-index"
+        body: {
+          size: 10000
+          "query": {
+          "bool": {
+            "must": [
+              {
+                "match": {"tags": "electricity_meter"}
+              }
+              {
+                  "range": {
+                    "@timestamp": {
+                      "gte": { "%timefilter%": "min" }, // Start time
+                      "lte": { "%timefilter%": "max" }, // End time
+                      "format": "epoch_millis"
+                    }
+                  }
+                }
+            ]
+          }
+        }
+        }
+      }
+      format: { property: "hits.hits" }
+    }
+    encoding: {
+      color: {
+        legend: null
+      }
+      x: {
+        field: _source.device_id
+        type: nominal
+        title: Power Measurement Device
+      }
+      y: {
+        title: Active Power (Watt) Normalized
+      }
+    }
+    layer: [
+      {
+        mark: {
+          type: bar
+          size: 14
+        }
+        encoding: {
+          y: {
+            datum: -1.1
+       
+          }
+          y2: {
+            datum: 1.6
+    
+          }
+          color: {
+            condition: [
+              {
+                test: "datum['_source']['amount'] > 30 && datum['_source']['amount'] < 59"
+                value: "#f8dfb3"
+              }
+              {
+                test: datum['_source']['amount'] <= 30
+                value: "#f8b3b3"
+              }
+            ]
+            value: lightgray
+          }
+        }
+      }
+      {
+        mark: {
+          type: rule
+          strokeWidth: 1
+          color: black
+          strokeCap: butt
+          strokeDash: [4,4]
+        }
+        encoding: {
+          y: {
+            datum: 0
+       
+          }
+          "x": {
+            "aggregate": "min",
+            "field": "_source.device_id"
+          },
+          "x2": {
+            "aggregate": "max",
+            "field": "_source.device_id"
+          }
+        }
+      }
+      {
+        mark: {
+          type: rule
+        }
+        encoding: {
+          y: {
+            field: _source.lower_threshold
+            type: quantitative
+            
+          }
+          y2: {
+            field: _source.upper_threshold
+            type: quantitative
+          }
+        }
+      }
+      {
+        mark: {
+          type: bar
+          size: 14
+        }
+        encoding: {
+          y: {
+            field: _source.q1
+            type: quantitative
+            
+          }
+          y2: {
+            field: _source.q3
+            
+          }
+          color: {
+            condition: [
+              {
+                test: "datum['_source']['amount'] > 30 && datum['_source']['amount'] < 59"
+                value: orange
+              }
+              {
+                test: datum['_source']['amount'] <= 30
+                value: red
+              }
+            ]
+            value: green
+          }
+        }
+      }
+      {
+        mark: {
+          type: tick
+          color: white
+          size: 14
+          thickness: 3
+          
+        }
+        encoding: {
+          y: {
+            field: _source.median
+            type: quantitative
+          }
+        }
+      }
+      {
+        mark: {
+          type: point
+          style: boxplot-outliers
+        }
+        encoding: {
+          y: {
+            field: _source.activepower
+            type: quantitative
+          }
+          opacity: {
+            condition: {
+              test: datum['_source']['outlier']
+              value: 1
+            }
+            value: 0
+          }
+          color: {
+            condition: [
+              {
+                test: "datum['_source']['amount'] > 30 && datum['_source']['amount'] < 59"
+                value: orange
+              }
+              {
+                test: datum['_source']['amount'] <= 30
+                value: red
+              }
+            ]
+            value: green
+          }
+        }
+      }
+    ]
+    autosize: {
+      type: fit
+      resize: true
+      contains: padding
+    }
+  }
